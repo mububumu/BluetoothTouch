@@ -1,0 +1,2 @@
+# BluetoothTouch
+基于Android API获取手机传感器数据并通过蓝牙发送至PC端
