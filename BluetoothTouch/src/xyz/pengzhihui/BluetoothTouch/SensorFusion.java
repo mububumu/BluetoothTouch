@@ -164,6 +164,7 @@ public class SensorFusion implements SensorEventListener
     {
     }
 
+    // 响应传感器事件
     @Override
     public void onSensorChanged(SensorEvent event)
     {
@@ -189,7 +190,8 @@ public class SensorFusion implements SensorEventListener
     // Calculates orientation angles from accelerometer and magnetometer output
     // 根据加速度计和磁力计计算方位角
     public void calculateAccMagOrientation()
-    {
+    {   // getRotationMatrix()计算结果为rotationMatrix
+        // getOrientation()计算结果为accMagOrientation
         if (SensorManager.getRotationMatrix(rotationMatrix, null, accel, magnet)) {
             SensorManager.getOrientation(rotationMatrix, accMagOrientation);
         }
@@ -249,8 +251,10 @@ public class SensorFusion implements SensorEventListener
         // 陀螺仪数据 -> 旋转矢量
         float[] deltaVector = new float[4];
         if (timestamp != 0) {
+            // 时间片段
             final float dT = (event.timestamp - timestamp) * NS2S;
             System.arraycopy(event.values, 0, gyro, 0, 3);
+            // 角速度积分 -> 旋转矢量
             getRotationVectorFromGyro(gyro, deltaVector, dT / 2.0f);
         }
 
@@ -259,6 +263,7 @@ public class SensorFusion implements SensorEventListener
         timestamp = event.timestamp;
 
         // Convert rotation vector into rotation matrix
+        // 旋转矢量 -> 旋转矩阵
         float[] deltaMatrix = new float[9];
         SensorManager.getRotationMatrixFromVector(deltaMatrix, deltaVector);
 
@@ -317,6 +322,7 @@ public class SensorFusion implements SensorEventListener
         zM[8] = 1.0f;
 
         // Rotation order is y, x, z (roll, pitch, azimuth)
+        // 旋转次序为 y-x-z
         float[] resultMatrix = matrixMultiplication(xM, yM);
         resultMatrix = matrixMultiplication(zM, resultMatrix);
         return resultMatrix;
@@ -389,6 +395,7 @@ public class SensorFusion implements SensorEventListener
                 fusedOrientation[2] = filter_coefficient * gyroOrientation[2] + oneMinusCoeff * accMagOrientation[2];
 
             // Overwrite gyro matrix and orientation with fused orientation to comensate gyro drift
+            // 用融合定向补偿陀螺仪漂移
             gyroMatrix = getRotationMatrixFromOrientation(fusedOrientation);
             System.arraycopy(fusedOrientation, 0, gyroOrientation, 0, 3);
 
