@@ -19,6 +19,7 @@
 
 package xyz.pengzhihui.BluetoothTouch;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -94,10 +95,11 @@ public class ImuFragment extends Fragment
 
         mRunnable = new Runnable()
         {
+            @SuppressLint("SetTextI18n")
             @Override
             public void run()
             {
-                mHandler.postDelayed(this, 50); // Update IMU data every 50ms
+//                mHandler.postDelayed(this, 5); // Update IMU data every 5ms
                 if (MainActivity.mSensorFusion == null)
                     return;
                 mAzimuthView.setText(MainActivity.mSensorFusion.azimuth);
@@ -109,49 +111,49 @@ public class ImuFragment extends Fragment
                 mCoefficient.setText(MainActivity.mSensorFusion.coefficient);
 
 
-                counter++;
-                if (counter > 2) { // Only send data every 150ms time
-                    counter = 0;
-                    if (MainActivity.mChatService == null)
-                        return;
-                    // 蓝牙开启 && 处于IMU模式
-                    if (MainActivity.mChatService.getState() == BluetoothChatService.STATE_CONNECTED && MainActivity.currentTabSelected == ViewPagerAdapter.IMU_FRAGMENT) {
-                        buttonState = mButton.isPressed();
-                        MainActivity.buttonState = buttonState;
+//                counter++;
+//                if (counter > 2) { // Only send data every 150ms time
+//                    counter = 0;
+                if (MainActivity.mChatService == null)
+                    return;
+                // 蓝牙开启 && 处于IMU模式
+                if (MainActivity.mChatService.getState() == BluetoothChatService.STATE_CONNECTED && MainActivity.currentTabSelected == ViewPagerAdapter.IMU_FRAGMENT) {
+                    buttonState = mButton.isPressed();
+                    MainActivity.buttonState = buttonState;
 
-                        if (MainActivity.joystickReleased || getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) // Check if joystick is released or we are not in landscape mode
-                            CustomViewPager.setPagingEnabled(!buttonState); // Set the ViewPager according to the button
-                        else
-                            CustomViewPager.setPagingEnabled(false);
+                    if (MainActivity.joystickReleased || getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) // Check if joystick is released or we are not in landscape mode
+                        CustomViewPager.setPagingEnabled(!buttonState); // Set the ViewPager according to the button
+                    else
+                        CustomViewPager.setPagingEnabled(false);
 
-                        // 蓝牙发送方位角数据
-                        if (MainActivity.joystickReleased) {
-                            if (buttonState) {
-                                lockRotation();
-                                if (sendCnt == 1) {
-                                    MainActivity.mChatService.write(MainActivity.poseData + ',' + MainActivity.mSensorFusion.pitch + ',' + MainActivity.mSensorFusion.roll + "," + MainActivity.mSensorFusion.azimuth + ',');
-                                }
-                                else
-                                    MainActivity.mChatService.write(MainActivity.accelData + ',' + MainActivity.mSensorFusion.accel[0] + ',' + MainActivity.mSensorFusion.accel[1] + "," + MainActivity.mSensorFusion.accel[2] + ',');
-                                sendCnt = 1 - sendCnt;
-                                mButton.setText(R.string.sendingData);
+                    // 蓝牙发送数据
+                    if (MainActivity.joystickReleased) {
+                        if (buttonState) {
+                            lockRotation();
+                            if (sendCnt == 1) {
+                                MainActivity.mChatService.write(MainActivity.poseData + ',' + MainActivity.mSensorFusion.pitch + ',' + MainActivity.mSensorFusion.roll + "," + MainActivity.mSensorFusion.azimuth + ',');
                             }
-                            else {
-                                unlockRotation();
-                                MainActivity.mChatService.write(MainActivity.sendStop);
-                                mButton.setText(R.string.notSendingData);
-                            }
+                            else
+                                MainActivity.mChatService.write(MainActivity.accelData + ',' + MainActivity.mSensorFusion.accel[0] + ',' + MainActivity.mSensorFusion.accel[1] + "," + MainActivity.mSensorFusion.accel[2] + ',');
+                            sendCnt = 1 - sendCnt;
+                            mButton.setText(R.string.sendingData);
+                        }
+                        else {
+                            unlockRotation();
+                            MainActivity.mChatService.write(MainActivity.sendStop);
+                            mButton.setText(R.string.notSendingData);
                         }
                     }
-                    else {
-                        mButton.setText(R.string.button);
-                        if (MainActivity.currentTabSelected == ViewPagerAdapter.IMU_FRAGMENT && MainActivity.joystickReleased)
-                            CustomViewPager.setPagingEnabled(true);
-                    }
                 }
+                else {
+                    mButton.setText(R.string.button);
+                    if (MainActivity.currentTabSelected == ViewPagerAdapter.IMU_FRAGMENT && MainActivity.joystickReleased)
+                        CustomViewPager.setPagingEnabled(true);
+                }
+//                }
             }
         };
-        mHandler.postDelayed(mRunnable, 50); // Update IMU data every 50ms
+        mHandler.postDelayed(mRunnable, 5); // Update IMU data every 5ms
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
