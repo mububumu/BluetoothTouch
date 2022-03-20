@@ -1,5 +1,6 @@
 package xyz.pengzhihui.BluetoothTouch;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;    //
 import android.bluetooth.BluetoothAdapter;
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity
     private static Toast mToast;
 
     // Message types sent from the BluetoothChatService Handler
+    // 蓝牙服务处理器返回的信息类型
     public static final int MESSAGE_STATE_CHANGE = 1;
     public static final int MESSAGE_READ = 2;
     public static final int MESSAGE_DEVICE_NAME = 3;
@@ -49,6 +51,7 @@ public class MainActivity extends AppCompatActivity
     public static final int MESSAGE_RETRY = 5;
 
     // Key names received from the BluetoothChatService Handler
+    // 蓝牙服务处理器返回的密钥
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
 
@@ -67,7 +70,6 @@ public class MainActivity extends AppCompatActivity
     private boolean btSecure; // If it's a new device we will pair with the device
     public static boolean stopRetrying;
 
-    private UnderlinePageIndicator mUnderlinePageIndicator;
     public static int currentTabSelected;
 
     public static String accValue = "";
@@ -87,8 +89,8 @@ public class MainActivity extends AppCompatActivity
     public static boolean newPIDValues;
 
     public static boolean backToSpot;
-    public static int maxAngle = 8; // Eight is the default value
-    public static int maxTurning = 20; // Twenty is the default value
+    public static int maxAngle = 8;         // Eight is the default value
+    public static int maxTurning = 20;      // Twenty is the default value
 
     public static String appVersion;
     public static String firmwareVersion;
@@ -165,12 +167,12 @@ public class MainActivity extends AppCompatActivity
         context = getApplicationContext();
 
         if (!getResources().getBoolean(R.bool.isTablet))
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Set portrait mode only - for small screens like phones
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);          // Set portrait mode only - for small screens like phones
         else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2)
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER); // Full screen rotation
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);     // Full screen rotation
             else
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR); // Full screen rotation
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);   // Full screen rotation
             new Handler().postDelayed(new Runnable()
             { // Hack to hide keyboard when the layout it rotated
                 @Override
@@ -220,7 +222,7 @@ public class MainActivity extends AppCompatActivity
             mViewPager.setOffscreenPageLimit(2); // Since two fragments is selected in landscape mode, this is used to smooth things out
 
         // Bind the underline indicator to the adapter
-        mUnderlinePageIndicator = (UnderlinePageIndicator) findViewById(R.id.indicator);
+        UnderlinePageIndicator mUnderlinePageIndicator = (UnderlinePageIndicator) findViewById(R.id.indicator);
         mUnderlinePageIndicator.setViewPager(mViewPager);
         mUnderlinePageIndicator.setFades(false);
 

@@ -76,9 +76,9 @@ public class ImuFragment extends Fragment
             public void run()
             {
                 if (SensorFusion.IMUOutputSelection == -1)
-                    mHandler.postDelayed(this, 100); // Run this again if it hasn't initialized the sensors yet
-                else if (SensorFusion.IMUOutputSelection != 2) // Check if a gyro is supported
-                    mTableRow.setVisibility(View.GONE); // If not then hide the tablerow
+                    mHandler.postDelayed(this, 100);    // Run this again if it hasn't initialized the sensors yet
+                else if (SensorFusion.IMUOutputSelection != 2)      // Check if a gyro is supported
+                    mTableRow.setVisibility(View.GONE);             // If not then hide the tablerow
                 // 如果设备不支持IMU相关操作，则隐藏tableRowCoefficient
             }
         }, 100); // Wait 100ms before running the code
@@ -99,7 +99,8 @@ public class ImuFragment extends Fragment
             @Override
             public void run()
             {
-//                mHandler.postDelayed(this, 5); // Update IMU data every 5ms
+//                mHandler.postDelayed(this, 50); // Update IMU data every 50ms
+                mHandler.postDelayed(mRunnable, 5);     // 延迟发送
                 if (MainActivity.mSensorFusion == null)
                     return;
                 mAzimuthView.setText(MainActivity.mSensorFusion.azimuth);
@@ -112,7 +113,7 @@ public class ImuFragment extends Fragment
 
 
 //                counter++;
-//                if (counter > 2) { // Only send data every 150ms time
+//                if (counter > 2) { // Only send data every 150ms
 //                    counter = 0;
                 if (MainActivity.mChatService == null)
                     return;
@@ -129,6 +130,7 @@ public class ImuFragment extends Fragment
                     // 蓝牙发送数据
                     if (MainActivity.joystickReleased) {
                         if (buttonState) {
+                            // 锁定屏幕方向
                             lockRotation();
                             if (sendCnt == 1) {
                                 MainActivity.mChatService.write(MainActivity.poseData + ',' + MainActivity.mSensorFusion.pitch + ',' + MainActivity.mSensorFusion.roll + "," + MainActivity.mSensorFusion.azimuth + ',');
@@ -153,7 +155,8 @@ public class ImuFragment extends Fragment
 //                }
             }
         };
-        mHandler.postDelayed(mRunnable, 5); // Update IMU data every 5ms
+//        mHandler.postDelayed(mRunnable, 50); // Update IMU data every 50ms
+        mHandler.postDelayed(mRunnable, 5);
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -166,11 +169,11 @@ public class ImuFragment extends Fragment
                 int rotation = MainActivity.getRotation();
                 int lock;
 
-                if (rotation == Surface.ROTATION_90) // Landscape
+                if (rotation == Surface.ROTATION_90)                    // Landscape
                     lock = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-                else if (rotation == Surface.ROTATION_180) // Reverse Portrait
+                else if (rotation == Surface.ROTATION_180)              // Reverse Portrait
                     lock = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
-                else if (rotation == Surface.ROTATION_270) // Reverse Landscape
+                else if (rotation == Surface.ROTATION_270)              // Reverse Landscape
                     lock = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
                 else
                     lock = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;

@@ -168,6 +168,7 @@ public class SensorFusion implements SensorEventListener
     @Override
     public void onSensorChanged(SensorEvent event)
     {
+        // getType()获取事件类型；values存储原始数据
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
                 // Copy new accelerometer data into accel array and calculate orientation
@@ -445,14 +446,14 @@ public class SensorFusion implements SensorEventListener
 //            //else // We don't do anything in portrait mode
 //        }
 
-        // rad -> deg
+        // rad -> deg && float -> string
         azimuth = d.format(azimuthOut * 180 / Math.PI);
         pitch = d.format(pitchOut * 180 / Math.PI);
         roll = d.format(rollOut * 180 / Math.PI);
         coefficient = d.format(tempFilter_coefficient);
     }
 
-    private Runnable updateOreintationDisplayTask = new Runnable()
+    private final Runnable updateOreintationDisplayTask = new Runnable()
     {
         @Override
         public void run()
