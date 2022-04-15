@@ -395,6 +395,74 @@ public class MainActivity extends AppCompatActivity
         mChatService = new BluetoothChatService(mBluetoothHandler, mBluetoothAdapter); // Initialize the BluetoothChatService to perform Bluetooth connections
     }
 
+    /* to be fix
+        @Override
+        public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+            if (D)
+                Log.d(TAG, "onTabSelected: " + tab.getPosition());
+            currentTabSelected = tab.getPosition();
+
+            Resources mResources = getResources();
+            if (mResources.getBoolean(R.bool.isTablet) && mResources.getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE && currentTabSelected == ViewPagerAdapter.INFO_FRAGMENT) { // Check if the last tab is selected in landscape mode
+                currentTabSelected -= 1; // If so don't go any further
+                ActionBar bar = getSupportActionBar();
+                bar.selectTab(bar.getTabAt(currentTabSelected));
+            }
+
+            mUnderlinePageIndicator.setCurrentItem(currentTabSelected); // When the given tab is selected, switch to the corresponding page in the ViewPager
+            CustomViewPager.setPagingEnabled(true);
+            if (checkTab(ViewPagerAdapter.GRAPH_FRAGMENT) && mChatService != null) {
+                if (mChatService.getState() == BluetoothChatService.STATE_CONNECTED) {
+                    mChatService.write(getKalman);
+                    if (GraphFragment.mToggleButton != null) {
+                        if (GraphFragment.mToggleButton.isChecked())
+                            mChatService.write(imuBegin); // Request data
+                        else
+                            mChatService.write(imuStop); // Stop sending data
+                    }
+                }
+            } else if (checkTab(ViewPagerAdapter.INFO_FRAGMENT) && mChatService != null) {
+                if (mChatService.getState() == BluetoothChatService.STATE_CONNECTED) {
+                    mChatService.write(getInfo); // Update info
+                    if (InfoFragment.mToggleButton != null) {
+                        if (InfoFragment.mToggleButton.isChecked())
+                            mChatService.write(statusBegin); // Request data
+                        else
+                            mChatService.write(statusStop); // Stop sending data
+                    }
+                }
+            }
+            if (!checkTab(ViewPagerAdapter.GRAPH_FRAGMENT)) { // Needed when the user rotates the screen
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE); // Hide the keyboard
+                imm.hideSoftInputFromWindow(getWindow().getDecorView().getApplicationWindowToken(), 0);
+            }
+        }
+
+        @Override
+        public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+            if (D)
+                Log.d(TAG, "onTabUnselected: " + tab.getPosition() + " " + currentTabSelected);
+            if ((checkTab(ViewPagerAdapter.IMU_FRAGMENT) || checkTab(ViewPagerAdapter.JOYSTICK_FRAGMENT)) && mChatService != null) { // Send stop command if the user selects another tab
+                if (mChatService.getState() == BluetoothChatService.STATE_CONNECTED)
+                    mChatService.write(sendStop);
+            } else if (checkTab(ViewPagerAdapter.GRAPH_FRAGMENT) && mChatService != null) {
+                if (mChatService.getState() == BluetoothChatService.STATE_CONNECTED)
+                    mChatService.write(imuStop);
+            } else if (checkTab(ViewPagerAdapter.INFO_FRAGMENT) && mChatService != null) {
+                if (mChatService.getState() == BluetoothChatService.STATE_CONNECTED)
+                    mChatService.write(statusStop);
+            }
+            if (checkTab(ViewPagerAdapter.GRAPH_FRAGMENT)) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE); // Hide the keyboard
+                imm.hideSoftInputFromWindow(getWindow().getDecorView().getApplicationWindowToken(), 0);
+            }
+        }
+
+        @Override
+        public void onTabReselected(ActionBar.Tab tab,
+                                    FragmentTransaction fragmentTransaction) {
+        }
+    */
     public static boolean checkTab(int tab)
     {
         return (currentTabSelected == tab || (context.getResources().getBoolean(R.bool.isTablet) && context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE && currentTabSelected == tab - 1)); // Check the tab to the left as well in landscape mode
@@ -433,6 +501,14 @@ public class MainActivity extends AppCompatActivity
                 startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
                 return true;
             case R.id.menu_settings:
+                // Open up the settings dialog
+                SettingsDialogFragment dialogFragment = new SettingsDialogFragment();
+                /* to be fix
+                dialogFragment.show(getSupportFragmentManager(), null);
+                 */
+                // 设置界面
+//                dialogFragment.show(getSupportFragmentManager(), null);
+
                 return true;
             case android.R.id.home:
 //                Log.d(TAG, "onOptionsItemSelected: Here is for home.");
@@ -488,12 +564,66 @@ public class MainActivity extends AppCompatActivity
                             MainActivity.showToast(mMainActivity.getString(R.string.connected_to) + " " + mConnectedDeviceName, Toast.LENGTH_SHORT);
                             if (mChatService == null)
                                 return;
+                            Handler mHandler = new Handler();
+                            mHandler.postDelayed(new Runnable()
+                            {
+                                public void run()
+                                {
+                                    mChatService.write(getPIDValues + getSettings + getInfo + getKalman);
+                                }
+                            }, 1000); // Wait 1 second before sending the message
+                            if (GraphFragment.mToggleButton != null) {
+                                if (GraphFragment.mToggleButton.isChecked() && checkTab(ViewPagerAdapter.GRAPH_FRAGMENT)) {
+                                    mHandler.postDelayed(new Runnable()
+                                    {
+                                        public void run()
+                                        {
+                                            mChatService.write(imuBegin); // Request data
+                                        }
+                                    }, 1000); // Wait 1 second before sending the message
+                                } else {
+                                    mHandler.postDelayed(new Runnable()
+                                    {
+                                        public void run()
+                                        {
+                                            mChatService.write(imuStop); // Stop sending data
+                                        }
+                                    }, 1000); // Wait 1 second before sending the message
+                                }
+                            }
+                            if (checkTab(ViewPagerAdapter.INFO_FRAGMENT)) {
+                                mHandler.postDelayed(new Runnable()
+                                {
+                                    public void run()
+                                    {
+                                        mChatService.write(statusBegin); // Request data
+                                    }
+                                }, 1000); // Wait 1 second before sending the message
+                            }
                             break;
                         case BluetoothChatService.STATE_CONNECTING:
                             break;
                     }
+                    PIDFragment.updateButton();
                     break;
                 case MESSAGE_READ:
+                    if (newPIDValues) {
+                        newPIDValues = false;
+                        PIDFragment.updateView();
+                    }
+                    if (newInfo || newStatus) {
+                        newInfo = false;
+                        newStatus = false;
+                        InfoFragment.updateView();
+                    }
+                    if (newIMUValues) {
+                        newIMUValues = false;
+                        GraphFragment.updateIMUValues();
+                    }
+                    if (newKalmanValues) {
+                        newKalmanValues = false;
+                        GraphFragment.updateKalmanValues();
+                    }
                     if (pairingWithDevice) {
                         pairingWithDevice = false;
                         MainActivity.showToast("Now enable discovery of your device", Toast.LENGTH_LONG);
@@ -506,6 +636,7 @@ public class MainActivity extends AppCompatActivity
                     break;
                 case MESSAGE_DISCONNECTED:
                     mMainActivity.supportInvalidateOptionsMenu();
+                    PIDFragment.updateButton();
                     if (msg.getData() != null)
                         MainActivity.showToast(msg.getData().getString(TOAST), Toast.LENGTH_SHORT);
                     break;
