@@ -99,8 +99,7 @@ public class ImuFragment extends Fragment
             @Override
             public void run()
             {
-//                mHandler.postDelayed(this, 50); // Update IMU data every 50ms
-                mHandler.postDelayed(mRunnable, 5);     // 延迟发送
+                mHandler.postDelayed(mRunnable, 1);     // 延迟发送
                 if (MainActivity.mSensorFusion == null)
                     return;
                 mAzimuthView.setText(MainActivity.mSensorFusion.azimuth);
@@ -155,8 +154,7 @@ public class ImuFragment extends Fragment
 //                }
             }
         };
-//        mHandler.postDelayed(mRunnable, 50); // Update IMU data every 50ms
-        mHandler.postDelayed(mRunnable, 5);
+        mHandler.postDelayed(mRunnable, 1);
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
